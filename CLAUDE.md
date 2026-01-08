@@ -1,3 +1,280 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+=== project overview ===
+
+# ALM-RMI Laravel Application
+
+This is a full-stack Laravel 12 application with React + TypeScript + Inertia.js frontend, built using Laravel Breeze authentication scaffolding.
+
+## Tech Stack
+
+- **Backend:** Laravel 12.45.1, PHP 8.4.11
+- **Frontend:** React 18.2.0, TypeScript 5.0.2, Inertia.js 2.0.18
+- **Styling:** Tailwind CSS 3.2.1, Headless UI
+- **Build Tool:** Vite 7.0.7, Bun (package manager)
+- **Database:** PostgreSQL (production), SQLite (testing)
+- **Testing:** PHPUnit 11.5.46
+- **Auth:** Laravel Breeze 2.3.8 + Sanctum 4.2.2
+
+## Development Commands
+
+### Setup
+```bash
+composer setup  # Full setup: install deps, copy .env, generate key, migrate, build frontend
+```
+
+### Development Server
+```bash
+composer run dev  # Runs all services concurrently: Laravel server, queue, logs (Pail), Vite
+# OR run individually:
+php artisan serve       # Backend server (http://127.0.0.1:8000)
+bun run dev            # Frontend hot reload (Vite)
+```
+
+### Testing
+```bash
+composer test                              # Run all tests
+php artisan test                          # Run all PHPUnit tests
+php artisan test tests/Feature/FooTest.php  # Run specific test file
+php artisan test --filter=testMethodName   # Run specific test method
+```
+
+### Code Quality
+```bash
+vendor/bin/pint          # Auto-fix code style (must run before committing PHP changes)
+vendor/bin/pint --dirty  # Only format uncommitted changes
+bun run build           # Build frontend for production
+```
+
+### Database
+```bash
+php artisan migrate              # Run migrations
+php artisan migrate:fresh --seed # Fresh database with seeders
+php artisan db:seed             # Run seeders only
+```
+
+## Application Architecture
+
+### Full-Stack Inertia.js Architecture
+
+This application uses **Inertia.js** to bridge Laravel and React without building a separate API:
+
+- **Controllers** return `Inertia::render('PageName', ['props'])` instead of JSON
+- **React Pages** receive props directly from Laravel controllers
+- **Routes** are defined in Laravel (`routes/web.php`, `routes/auth.php`)
+- **Type-safe routing** via Ziggy: use `route('route.name')` in TypeScript
+- **Shared data** (like auth user) is available to all pages via `HandleInertiaRequests` middleware
+
+### Directory Structure
+
+#### Backend (`/app`)
+```
+app/
+├── Http/
+│   ├── Controllers/     # Standard Laravel controllers
+│   ├── Middleware/      # HandleInertiaRequests (shares props with frontend)
+│   └── Requests/        # Form Request validation classes
+├── Models/              # Eloquent models (User, etc.)
+├── Mcp/                 # MCP (Model Context Protocol) integration
+│   ├── Servers/         # Custom MCP servers for AI tooling
+│   ├── Tools/           # MCP tools (DatabaseQueryTool, CreateUserTool, etc.)
+│   └── Resources/       # MCP resources (DatabaseSchemaResource)
+└── Providers/           # Service providers
+```
+
+#### Frontend (`/resources/js`)
+```
+resources/js/
+├── Components/     # Reusable React components (Button, Dropdown, Modal, etc.)
+├── Layouts/        # Layout wrappers (AuthenticatedLayout, GuestLayout)
+├── Pages/          # Inertia page components (map 1:1 with routes)
+│   ├── Auth/       # Authentication pages (Login, Register, etc.)
+│   ├── Profile/    # User profile pages
+│   └── Welcome.tsx # Landing page
+├── types/          # TypeScript type definitions
+├── app.tsx         # Inertia app entry point
+└── bootstrap.ts    # Frontend bootstrapping (axios, etc.)
+```
+
+#### Routes
+```
+routes/
+├── web.php      # Main web routes (Inertia pages)
+├── auth.php     # Authentication routes (login, register, password reset)
+├── ai.php       # AI/MCP related routes
+└── console.php  # Artisan console commands
+```
+
+#### Configuration (Laravel 12 Simplified Structure)
+- `bootstrap/app.php` - Main application configuration (middleware, routing, exceptions)
+- `bootstrap/providers.php` - Service providers registration
+- **No Kernel files** - middleware registered directly in `bootstrap/app.php`
+
+### Inertia.js Patterns
+
+#### Backend: Controller Pattern
+```php
+// Return Inertia response with props
+return Inertia::render('Dashboard', [
+    'user' => $request->user(),
+    'stats' => $stats,
+]);
+```
+
+#### Frontend: Page Component Pattern
+```tsx
+// resources/js/Pages/Dashboard.tsx
+import { PageProps } from '@/types';
+
+export default function Dashboard({ user, stats }: PageProps<{ stats: Stats }>) {
+    return <AuthenticatedLayout>...</AuthenticatedLayout>;
+}
+```
+
+#### Accessing Shared Props
+```tsx
+import { usePage } from '@inertiajs/react';
+
+const { auth } = usePage().props; // Access shared auth data
+```
+
+#### Navigation
+```tsx
+import { Link } from '@inertiajs/react';
+
+<Link href={route('dashboard')}>Dashboard</Link>
+```
+
+### Authentication
+
+Built on Laravel Breeze with complete flows:
+- Registration, login, logout
+- Email verification
+- Password reset
+- Password confirmation
+- Profile management
+
+Auth state is shared globally via `HandleInertiaRequests` middleware:
+```php
+// app/Http/Middleware/HandleInertiaRequests.php
+public function share(Request $request): array
+{
+    return [
+        ...parent::share($request),
+        'auth' => ['user' => $request->user()],
+    ];
+}
+```
+
+### MCP (Model Context Protocol) Integration
+
+This application includes MCP integration in `/app/Mcp/` for AI-assisted development:
+
+- **Servers:** Custom MCP servers (e.g., `AlmRmiServer`)
+- **Tools:** Callable tools for AI agents (database queries, user creation, etc.)
+- **Resources:** Structured data resources (database schema, etc.)
+
+Routes for MCP are defined in `routes/ai.php`.
+
+### Testing Approach
+
+- **Framework:** PHPUnit 11 (not Pest)
+- **Location:** `/tests/Feature/` and `/tests/Unit/`
+- **Database:** In-memory SQLite for speed
+- **Pattern:** Use `RefreshDatabase` trait, factories for test data
+- **Coverage:** Test happy paths, failure cases, and edge cases
+
+Example test structure:
+```php
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class ExampleTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_user_can_login(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('dashboard'));
+    }
+}
+```
+
+### Frontend Component Patterns
+
+#### Reusable Components
+Check `/resources/js/Components/` before creating new components:
+- `PrimaryButton`, `SecondaryButton`, `DangerButton`
+- `TextInput`, `InputLabel`, `InputError`
+- `Modal`, `Dropdown`, `ResponsiveNavLink`
+
+#### Layout Composition
+```tsx
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+
+export default function MyPage() {
+    return (
+        <AuthenticatedLayout header={<h2>Title</h2>}>
+            <div className="max-w-7xl mx-auto">
+                {/* Page content */}
+            </div>
+        </AuthenticatedLayout>
+    );
+}
+```
+
+## Key Conventions
+
+### Backend
+- Controllers return `Inertia::render()` for page responses
+- Use Form Request classes for validation (check `/app/Http/Requests/`)
+- Named routes: `route('dashboard')`, `route('profile.edit')`
+- Constructor property promotion: `public function __construct(public GitHub $github) {}`
+- Model casts as methods: `protected function casts(): array { return [...]; }`
+
+### Frontend
+- TypeScript for all React components
+- Functional components with hooks
+- Props typed via `PageProps<T>` from `@/types`
+- Tailwind CSS for styling (no inline styles)
+- Use `route()` helper from Ziggy for type-safe routing
+
+### File Naming
+- React components: PascalCase (e.g., `UserProfile.tsx`)
+- Pages: PascalCase matching route structure (e.g., `Pages/Auth/Login.tsx`)
+- PHP classes: PascalCase
+- Migrations: snake_case with timestamp prefix
+
+## Important Notes
+
+### Laravel 12 Streamlined Structure
+- **Middleware:** No dedicated middleware Kernel - register in `bootstrap/app.php`
+- **Console:** No console Kernel - commands auto-discovered from `app/Console/Commands/`
+- **Routes:** Registered in `bootstrap/app.php` via `withRouting()`
+- **Providers:** Listed in `bootstrap/providers.php`
+
+### Inertia Specifics
+- The main Blade template is `/resources/views/app.blade.php` (rarely modified)
+- Page components dynamically loaded via `import.meta.glob()` in `app.tsx`
+- Middleware `HandleInertiaRequests` manages shared props and asset versioning
+- Use `Inertia::render()` in controllers, never return JSON for page requests
+
+### Package Manager
+This project uses **Bun** instead of npm/yarn:
+- `bun install` (not npm install)
+- `bun run dev` (not npm run dev)
+- `bun run build` (not npm run build)
+
 <laravel-boost-guidelines>
 === foundation rules ===
 
