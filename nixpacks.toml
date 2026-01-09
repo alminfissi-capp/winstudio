@@ -1,5 +1,15 @@
 [phases.setup]
-nixPkgs = ["php84", "nodejs_20", "postgresql"]
+nixPkgs = [
+    "php84",
+    "php84Extensions.pdo_pgsql",
+    "php84Extensions.pgsql",
+    "php84Extensions.mbstring",
+    "php84Extensions.xml",
+    "php84Extensions.curl",
+    "php84Extensions.zip",
+    "nodejs_20",
+    "postgresql"
+]
 
 [phases.install]
 cmds = [
