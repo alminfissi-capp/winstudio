@@ -6,17 +6,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 # ALM-RMI Laravel Application
 
-This is a full-stack Laravel 12 application with React + TypeScript + Inertia.js frontend, built using Laravel Breeze authentication scaffolding.
+This is a full-stack Laravel 12 application with React + TypeScript + Inertia.js frontend, built using the Laravel 12 React starter kit with shadcn/ui.
 
 ## Tech Stack
 
-- **Backend:** Laravel 12.45.1, PHP 8.4.11
-- **Frontend:** React 18.2.0, TypeScript 5.0.2, Inertia.js 2.0.18
-- **Styling:** Tailwind CSS 3.2.1, Headless UI
-- **Build Tool:** Vite 7.0.7, Bun (package manager)
-- **Database:** PostgreSQL (production), SQLite (testing)
-- **Testing:** PHPUnit 11.5.46
-- **Auth:** Laravel Breeze 2.3.8 + Sanctum 4.2.2
+- **Backend:** Laravel 12.46.0, PHP 8.4.11
+- **Frontend:** React 19, TypeScript 5.9.3, Inertia.js 2.0.18
+- **Styling:** Tailwind CSS 4, shadcn/ui (Radix UI components)
+- **Build Tool:** Vite 7.3.1, Bun (package manager)
+- **Database:** PostgreSQL (production), SQLite (local dev)
+- **Testing:** PHPUnit 11
+- **Auth:** Laravel Fortify + Sanctum
 
 ## Development Commands
 
@@ -87,15 +87,21 @@ app/
 #### Frontend (`/resources/js`)
 ```
 resources/js/
-├── Components/     # Reusable React components (Button, Dropdown, Modal, etc.)
-├── Layouts/        # Layout wrappers (AuthenticatedLayout, GuestLayout)
-├── Pages/          # Inertia page components (map 1:1 with routes)
-│   ├── Auth/       # Authentication pages (Login, Register, etc.)
-│   ├── Profile/    # User profile pages
-│   └── Welcome.tsx # Landing page
+├── components/
+│   ├── ui/         # shadcn/ui components (Button, Input, Dialog, etc.)
+│   └── ...         # Custom application components
+├── hooks/          # React hooks (useAuth, useToast, etc.)
+├── layouts/        # Layout wrappers (app-layout, auth-layout)
+│   ├── app/        # App layouts (sidebar, header variants)
+│   └── auth/       # Auth layouts (simple, card, split variants)
+├── lib/            # Utility functions (cn, formatters, etc.)
+├── pages/          # Inertia page components (map 1:1 with routes)
+│   ├── auth/       # Authentication pages (login, register, etc.)
+│   ├── profile/    # User profile pages
+│   └── welcome.tsx # Landing page
 ├── types/          # TypeScript type definitions
 ├── app.tsx         # Inertia app entry point
-└── bootstrap.ts    # Frontend bootstrapping (axios, etc.)
+└── ssr.tsx         # Server-side rendering entry (optional)
 ```
 
 #### Routes
@@ -212,26 +218,44 @@ class ExampleTest extends TestCase
 
 ### Frontend Component Patterns
 
-#### Reusable Components
-Check `/resources/js/Components/` before creating new components:
-- `PrimaryButton`, `SecondaryButton`, `DangerButton`
-- `TextInput`, `InputLabel`, `InputError`
-- `Modal`, `Dropdown`, `ResponsiveNavLink`
+#### shadcn/ui Components
+This app uses shadcn/ui for UI components. Check `/resources/js/components/ui/` for available components:
+- `Button`, `Input`, `Label`, `Checkbox`, `Select`
+- `Dialog`, `DropdownMenu`, `Alert`, `Card`
+- `NavigationMenu`, `Separator`, `Switch`, `Tooltip`
+- And many more...
+
+**Adding new shadcn/ui components:**
+```bash
+npx shadcn@latest add <component-name>
+# Example: npx shadcn@latest add table
+```
+
+**Using components:**
+```tsx
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+
+<Button variant="default">Click me</Button>
+<Input type="text" placeholder="Enter text" />
+```
 
 #### Layout Composition
 ```tsx
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import AppLayout from '@/layouts/app-layout';
 
 export default function MyPage() {
     return (
-        <AuthenticatedLayout header={<h2>Title</h2>}>
-            <div className="max-w-7xl mx-auto">
+        <AppLayout>
+            <div className="max-w-7xl mx-auto p-6">
                 {/* Page content */}
             </div>
-        </AuthenticatedLayout>
+        </AppLayout>
     );
 }
 ```
+
+The app supports multiple layout variants - see `/resources/js/layouts/` for options.
 
 ## Key Conventions
 
