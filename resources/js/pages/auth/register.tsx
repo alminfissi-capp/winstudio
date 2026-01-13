@@ -1,5 +1,5 @@
 import { login } from '@/routes/index';
-import { store } from '@/routes/register/index';
+import { store } from '@/routes/register/index.ts';
 import { Form, Head } from '@inertiajs/react';
 
 import InputError from '@/components/input-error';

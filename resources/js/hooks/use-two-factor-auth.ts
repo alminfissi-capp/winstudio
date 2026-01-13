@@ -1,4 +1,4 @@
-import { qrCode, recoveryCodes, secretKey } from '@/routes/two-factor/index';
+import { qrCode, recoveryCodes, secretKey } from '@/routes/two-factor/index.ts';
 import { useCallback, useMemo, useState } from 'react';
 
 interface TwoFactorSetupData {

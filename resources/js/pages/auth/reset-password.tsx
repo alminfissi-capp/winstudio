@@ -1,4 +1,4 @@
-import { update } from '@/routes/password/index';
+import { update } from '@/routes/password/index.ts';
 import { Form, Head } from '@inertiajs/react';
 
 import InputError from '@/components/input-error';
