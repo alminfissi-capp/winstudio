@@ -1,5 +1,5 @@
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes/index';
+import { dashboard } from '@/routes/index.ts';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
