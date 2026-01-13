@@ -17,9 +17,11 @@ export default defineConfig({
             },
         }),
         tailwindcss(),
-        wayfinder({
-            formVariants: true,
-        }),
+        // Temporarily disabled - having issues finding PHP in PATH
+        // wayfinder({
+        //     formVariants: true,
+        //     phpBinary: '/usr/bin/php',
+        // }),
     ],
     esbuild: {
         jsx: 'automatic',
