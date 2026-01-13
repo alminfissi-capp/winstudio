@@ -1,4 +1,4 @@
-import { login } from '@/routes';
+import { login } from '@/routes/index';
 import { store } from '@/routes/register';
 import { Form, Head } from '@inertiajs/react';
 
