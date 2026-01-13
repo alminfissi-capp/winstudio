@@ -18,7 +18,7 @@ export default defineConfig({
             },
         }),
         tailwindcss(),
-        // Temporarily disabled - having issues finding PHP in PATH
+        // Wayfinder disabled - routes are committed to git instead
         // wayfinder({
         //     formVariants: true,
         //     phpBinary: '/usr/bin/php',
