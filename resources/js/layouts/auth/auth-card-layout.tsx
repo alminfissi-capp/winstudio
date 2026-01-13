@@ -6,7 +6,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { home } from '@/routes/index.ts';
+import { home } from '@/routes/index';
 import { Link } from '@inertiajs/react';
 import { type PropsWithChildren } from 'react';
 

@@ -1,6 +1,6 @@
 // Components
-import { login } from '@/routes/index.ts';
-import { email } from '@/routes/password/index.ts';
+import { login } from '@/routes/index';
+import { email } from '@/routes/password/index';
 import { Form, Head } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
 
