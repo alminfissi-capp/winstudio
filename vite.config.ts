@@ -23,16 +23,6 @@ export default defineConfig({
         //     formVariants: true,
         //     phpBinary: '/usr/bin/php',
         // }),
-        {
-            name: 'resolve-index',
-            resolveId(source) {
-                // Auto-resolve directory imports to index.ts files
-                if (source.startsWith('@/routes') && !source.includes('.')) {
-                    const resolved = source.replace('@/', './resources/js/');
-                    return path.resolve(__dirname, resolved, 'index.ts');
-                }
-            },
-        },
     ],
     resolve: {
         alias: {
