@@ -8,7 +8,7 @@ nixPkgs = [
     "php84Extensions.curl",
     "php84Extensions.zip",
     "php84Packages.composer",
-    "nodejs_20",
+    "nodejs_22",
     "bun",
     "postgresql"
 ]
