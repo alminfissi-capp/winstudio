@@ -1,0 +1,58 @@
+{
+  "name": "ALM-RMI - Gestione Infissi",
+  "short_name": "ALM-RMI",
+  "description": "Gestisci progetti, crea preventivi e configura finestre e porte con un builder visuale intuitivo",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["productivity", "business"],
+  "shortcuts": [
+    {
+      "name": "Progetti",
+      "short_name": "Progetti",
+      "description": "Visualizza i tuoi progetti",
+      "url": "/projects",
+      "icons": [
+        {
+          "src": "/favicon.svg",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Nuovo Progetto",
+      "short_name": "Nuovo",
+      "description": "Crea un nuovo progetto",
+      "url": "/projects?action=new",
+      "icons": [
+        {
+          "src": "/favicon.svg",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}
