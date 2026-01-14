@@ -18,6 +18,8 @@ export default function FrameBuilderCanvas({
     const [keypadType, setKeypadType] = useState<'width' | 'height'>('width');
     const [dragging, setDragging] = useState<'width' | 'height' | null>(null);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
+    const [previewWidth, setPreviewWidth] = useState<number | null>(null);
+    const [previewHeight, setPreviewHeight] = useState<number | null>(null);
 
     const handleDimensionClick = (type: 'width' | 'height') => {
         setKeypadType(type);
@@ -69,12 +71,12 @@ export default function FrameBuilderCanvas({
                 const newWidth = dragStart.width + deltaX * 1.5;
                 const clampedWidth = Math.max(400, Math.min(4000, newWidth));
                 const roundedWidth = roundToNearest(clampedWidth, 10);
-                onDimensionChange(roundedWidth, dragStart.height);
+                setPreviewWidth(roundedWidth);
             } else {
                 const newHeight = dragStart.height + deltaY * 1.5;
                 const clampedHeight = Math.max(600, Math.min(3000, newHeight));
                 const roundedHeight = roundToNearest(clampedHeight, 10);
-                onDimensionChange(dragStart.width, roundedHeight);
+                setPreviewHeight(roundedHeight);
             }
         };
 
@@ -89,7 +91,17 @@ export default function FrameBuilderCanvas({
         };
 
         const handleEnd = () => {
+            // Apply final dimension change
+            if (dragging === 'width' && previewWidth !== null) {
+                onDimensionChange(previewWidth, dragStart.height);
+            } else if (dragging === 'height' && previewHeight !== null) {
+                onDimensionChange(dragStart.width, previewHeight);
+            }
+
+            // Reset states
             setDragging(null);
+            setPreviewWidth(null);
+            setPreviewHeight(null);
         };
 
         window.addEventListener('mousemove', handleMouseMove);
@@ -103,7 +115,7 @@ export default function FrameBuilderCanvas({
             window.removeEventListener('touchmove', handleTouchMove);
             window.removeEventListener('touchend', handleEnd);
         };
-    }, [dragging, dragStart, onDimensionChange]);
+    }, [dragging, dragStart, previewWidth, previewHeight, onDimensionChange]);
 
     if (!frame) {
         return (
@@ -238,38 +250,66 @@ export default function FrameBuilderCanvas({
                         </svg>
 
                         {/* Dimension handles */}
-                        <div
-                            className="absolute -right-12 top-1/2 flex -translate-y-1/2 cursor-ns-resize flex-col items-center gap-2 touch-none"
-                            onMouseDown={(e) => handleMouseDown('height', e)}
-                            onTouchStart={(e) => handleTouchStart('height', e)}
-                        >
-                            <div className="flex h-24 w-10 items-center justify-center rounded-lg bg-blue-500 shadow-lg transition-all hover:bg-blue-600 hover:scale-110">
+                        {/* Height handle (vertical) */}
+                        <div className="absolute -right-16 top-1/2 flex -translate-y-1/2 flex-col items-center gap-2">
+                            {/* Drag area (icon) - 40% bigger */}
+                            <div
+                                className={`flex h-32 w-14 cursor-ns-resize touch-none items-center justify-center rounded-lg shadow-lg transition-all hover:scale-105 ${
+                                    dragging === 'height'
+                                        ? 'bg-green-500 scale-105'
+                                        : 'bg-blue-500 hover:bg-blue-600'
+                                }`}
+                                onMouseDown={(e) => handleMouseDown('height', e)}
+                                onTouchStart={(e) => handleTouchStart('height', e)}
+                            >
                                 <div className="flex flex-col gap-1">
-                                    <div className="h-1 w-6 rounded-full bg-white" />
-                                    <div className="h-1 w-6 rounded-full bg-white" />
-                                    <div className="h-1 w-6 rounded-full bg-white" />
+                                    <div className="h-1.5 w-7 rounded-full bg-white" />
+                                    <div className="h-1.5 w-7 rounded-full bg-white" />
+                                    <div className="h-1.5 w-7 rounded-full bg-white" />
                                 </div>
                             </div>
-                            <span className="rounded-md bg-gray-900 px-3 py-1 text-sm font-bold text-white">
-                                {height}
-                            </span>
+
+                            {/* Click area (number) - opens keypad */}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDimensionClick('height');
+                                }}
+                                className="min-h-[44px] min-w-[60px] rounded-md bg-gray-900 px-3 py-2 text-sm font-bold text-white transition-colors hover:bg-gray-800 active:bg-gray-700"
+                            >
+                                {previewHeight ?? height}
+                            </button>
                         </div>
 
-                        <div
-                            className="absolute -bottom-12 left-1/2 flex -translate-x-1/2 cursor-ew-resize items-center gap-2 touch-none"
-                            onMouseDown={(e) => handleMouseDown('width', e)}
-                            onTouchStart={(e) => handleTouchStart('width', e)}
-                        >
-                            <div className="flex h-10 w-24 items-center justify-center rounded-lg bg-blue-500 shadow-lg transition-all hover:bg-blue-600 hover:scale-110">
+                        {/* Width handle (horizontal) */}
+                        <div className="absolute -bottom-16 left-1/2 flex -translate-x-1/2 items-center gap-2">
+                            {/* Drag area (icon) - 40% bigger */}
+                            <div
+                                className={`flex h-14 w-32 cursor-ew-resize touch-none items-center justify-center rounded-lg shadow-lg transition-all hover:scale-105 ${
+                                    dragging === 'width'
+                                        ? 'bg-green-500 scale-105'
+                                        : 'bg-blue-500 hover:bg-blue-600'
+                                }`}
+                                onMouseDown={(e) => handleMouseDown('width', e)}
+                                onTouchStart={(e) => handleTouchStart('width', e)}
+                            >
                                 <div className="flex gap-1">
-                                    <div className="h-6 w-1 rounded-full bg-white" />
-                                    <div className="h-6 w-1 rounded-full bg-white" />
-                                    <div className="h-6 w-1 rounded-full bg-white" />
+                                    <div className="h-7 w-1.5 rounded-full bg-white" />
+                                    <div className="h-7 w-1.5 rounded-full bg-white" />
+                                    <div className="h-7 w-1.5 rounded-full bg-white" />
                                 </div>
                             </div>
-                            <span className="rounded-md bg-gray-900 px-3 py-1 text-sm font-bold text-white">
-                                {width}
-                            </span>
+
+                            {/* Click area (number) - opens keypad */}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDimensionClick('width');
+                                }}
+                                className="min-h-[44px] min-w-[60px] rounded-md bg-gray-900 px-3 py-2 text-sm font-bold text-white transition-colors hover:bg-gray-800 active:bg-gray-700"
+                            >
+                                {previewWidth ?? width}
+                            </button>
                         </div>
                     </Card>
                 </div>
