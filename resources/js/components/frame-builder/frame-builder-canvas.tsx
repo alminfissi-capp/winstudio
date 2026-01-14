@@ -32,44 +32,76 @@ export default function FrameBuilderCanvas({
         }
     };
 
-    const handleMouseDown = (type: 'width' | 'height', e: React.MouseEvent) => {
+    const handleDragStart = (type: 'width' | 'height', clientX: number, clientY: number) => {
         if (!frame) return;
-        e.preventDefault();
         setDragging(type);
         setDragStart({
-            x: e.clientX,
-            y: e.clientY,
+            x: clientX,
+            y: clientY,
             width: frame.width || 1200,
             height: frame.height || 1500,
         });
     };
 
+    const handleMouseDown = (type: 'width' | 'height', e: React.MouseEvent) => {
+        e.preventDefault();
+        handleDragStart(type, e.clientX, e.clientY);
+    };
+
+    const handleTouchStart = (type: 'width' | 'height', e: React.TouchEvent) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        handleDragStart(type, touch.clientX, touch.clientY);
+    };
+
     useEffect(() => {
         if (!dragging) return;
 
-        const handleMouseMove = (e: MouseEvent) => {
-            const deltaX = e.clientX - dragStart.x;
-            const deltaY = e.clientY - dragStart.y;
+        const roundToNearest = (value: number, nearest: number = 10) => {
+            return Math.round(value / nearest) * nearest;
+        };
+
+        const handleMove = (clientX: number, clientY: number) => {
+            const deltaX = clientX - dragStart.x;
+            const deltaY = clientY - dragStart.y;
 
             if (dragging === 'width') {
-                const newWidth = Math.max(400, Math.min(4000, dragStart.width + deltaX * 3));
-                onDimensionChange(Math.round(newWidth), dragStart.height);
+                const newWidth = dragStart.width + deltaX * 1.5;
+                const clampedWidth = Math.max(400, Math.min(4000, newWidth));
+                const roundedWidth = roundToNearest(clampedWidth, 10);
+                onDimensionChange(roundedWidth, dragStart.height);
             } else {
-                const newHeight = Math.max(600, Math.min(3000, dragStart.height + deltaY * 3));
-                onDimensionChange(dragStart.width, Math.round(newHeight));
+                const newHeight = dragStart.height + deltaY * 1.5;
+                const clampedHeight = Math.max(600, Math.min(3000, newHeight));
+                const roundedHeight = roundToNearest(clampedHeight, 10);
+                onDimensionChange(dragStart.width, roundedHeight);
             }
         };
 
-        const handleMouseUp = () => {
+        const handleMouseMove = (e: MouseEvent) => {
+            handleMove(e.clientX, e.clientY);
+        };
+
+        const handleTouchMove = (e: TouchEvent) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            handleMove(touch.clientX, touch.clientY);
+        };
+
+        const handleEnd = () => {
             setDragging(null);
         };
 
         window.addEventListener('mousemove', handleMouseMove);
-        window.addEventListener('mouseup', handleMouseUp);
+        window.addEventListener('mouseup', handleEnd);
+        window.addEventListener('touchmove', handleTouchMove, { passive: false });
+        window.addEventListener('touchend', handleEnd);
 
         return () => {
             window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handleMouseUp);
+            window.removeEventListener('mouseup', handleEnd);
+            window.removeEventListener('touchmove', handleTouchMove);
+            window.removeEventListener('touchend', handleEnd);
         };
     }, [dragging, dragStart, onDimensionChange]);
 
@@ -207,8 +239,9 @@ export default function FrameBuilderCanvas({
 
                         {/* Dimension handles */}
                         <div
-                            className="absolute -right-12 top-1/2 flex -translate-y-1/2 cursor-ns-resize flex-col items-center gap-2"
+                            className="absolute -right-12 top-1/2 flex -translate-y-1/2 cursor-ns-resize flex-col items-center gap-2 touch-none"
                             onMouseDown={(e) => handleMouseDown('height', e)}
+                            onTouchStart={(e) => handleTouchStart('height', e)}
                         >
                             <div className="flex h-24 w-10 items-center justify-center rounded-lg bg-blue-500 shadow-lg transition-all hover:bg-blue-600 hover:scale-110">
                                 <div className="flex flex-col gap-1">
@@ -223,8 +256,9 @@ export default function FrameBuilderCanvas({
                         </div>
 
                         <div
-                            className="absolute -bottom-12 left-1/2 flex -translate-x-1/2 cursor-ew-resize items-center gap-2"
+                            className="absolute -bottom-12 left-1/2 flex -translate-x-1/2 cursor-ew-resize items-center gap-2 touch-none"
                             onMouseDown={(e) => handleMouseDown('width', e)}
+                            onTouchStart={(e) => handleTouchStart('width', e)}
                         >
                             <div className="flex h-10 w-24 items-center justify-center rounded-lg bg-blue-500 shadow-lg transition-all hover:bg-blue-600 hover:scale-110">
                                 <div className="flex gap-1">
