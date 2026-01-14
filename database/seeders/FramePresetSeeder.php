@@ -135,7 +135,10 @@ class FramePresetSeeder extends Seeder
         ];
 
         foreach ($presets as $preset) {
-            \App\Models\FramePreset::create($preset);
+            \App\Models\FramePreset::updateOrCreate(
+                ['code' => $preset['code']], // Find by code
+                $preset // Update or create with these values
+            );
         }
     }
 }
