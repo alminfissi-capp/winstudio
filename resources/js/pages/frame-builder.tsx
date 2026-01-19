@@ -37,8 +37,14 @@ export default function FrameBuilder({
             },
             {
                 preserveScroll: true,
-                onSuccess: () => {
+                onSuccess: (page) => {
                     setIsFrameSelectionOpen(false);
+                    // Seleziona automaticamente il nuovo frame (l'ultimo nella lista)
+                    const updatedProject = (page.props as { project: Project }).project;
+                    const newFrame = updatedProject.frames?.[updatedProject.frames.length - 1];
+                    if (newFrame) {
+                        setSelectedFrameId(newFrame.id);
+                    }
                 },
             },
         );

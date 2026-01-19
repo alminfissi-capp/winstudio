@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Frame } from '@/types';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import NumericKeypad from './numeric-keypad';
 import { Ruler } from 'lucide-react';
@@ -51,7 +50,6 @@ export default function FrameBuilderCanvas({
     };
 
     const handleTouchStart = (type: 'width' | 'height', e: React.TouchEvent) => {
-        e.preventDefault();
         const touch = e.touches[0];
         handleDragStart(type, touch.clientX, touch.clientY);
     };
@@ -135,8 +133,11 @@ export default function FrameBuilderCanvas({
     const width = frame.width || 1200;
     const height = frame.height || 1500;
 
-    // Rendering ottimizzato con scala fissa
-    const displayScale = 0.25; // 1mm = 0.25px
+    // Scala dinamica: adatta il frame allo spazio disponibile mantenendo l'aspect ratio
+    const maxDisplaySize = 300; // dimensione massima in pixel
+    const scaleX = maxDisplaySize / width;
+    const scaleY = maxDisplaySize / height;
+    const displayScale = Math.min(scaleX, scaleY);
     const displayWidth = width * displayScale;
     const displayHeight = height * displayScale;
 
@@ -251,10 +252,9 @@ export default function FrameBuilderCanvas({
 
                         {/* Dimension handles */}
                         {/* Height handle (vertical) */}
-                        <div className="absolute -right-16 top-1/2 flex -translate-y-1/2 flex-col items-center gap-2">
-                            {/* Drag area (icon) - 40% bigger */}
+                        <div className="absolute -right-12 top-1/2 flex -translate-y-1/2 flex-col items-center gap-1.5">
                             <div
-                                className={`flex h-32 w-14 cursor-ns-resize touch-none items-center justify-center rounded-lg shadow-lg transition-all hover:scale-105 ${
+                                className={`flex h-16 w-9 cursor-ns-resize touch-none items-center justify-center rounded-md shadow-md transition-all hover:scale-105 ${
                                     dragging === 'height'
                                         ? 'bg-green-500 scale-105'
                                         : 'bg-blue-500 hover:bg-blue-600'
@@ -262,30 +262,28 @@ export default function FrameBuilderCanvas({
                                 onMouseDown={(e) => handleMouseDown('height', e)}
                                 onTouchStart={(e) => handleTouchStart('height', e)}
                             >
-                                <div className="flex flex-col gap-1">
-                                    <div className="h-1.5 w-7 rounded-full bg-white" />
-                                    <div className="h-1.5 w-7 rounded-full bg-white" />
-                                    <div className="h-1.5 w-7 rounded-full bg-white" />
+                                <div className="flex flex-col gap-0.5">
+                                    <div className="h-1 w-4 rounded-full bg-white" />
+                                    <div className="h-1 w-4 rounded-full bg-white" />
+                                    <div className="h-1 w-4 rounded-full bg-white" />
                                 </div>
                             </div>
 
-                            {/* Click area (number) - opens keypad */}
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     handleDimensionClick('height');
                                 }}
-                                className="min-h-[44px] min-w-[60px] rounded-md bg-gray-900 px-3 py-2 text-sm font-bold text-white transition-colors hover:bg-gray-800 active:bg-gray-700"
+                                className="min-h-[32px] min-w-[44px] rounded bg-gray-900 px-2 py-1 text-xs font-bold text-white transition-colors hover:bg-gray-800 active:bg-gray-700"
                             >
                                 {previewHeight ?? height}
                             </button>
                         </div>
 
                         {/* Width handle (horizontal) */}
-                        <div className="absolute -bottom-16 left-1/2 flex -translate-x-1/2 items-center gap-2">
-                            {/* Drag area (icon) - 40% bigger */}
+                        <div className="absolute -bottom-12 left-1/2 flex -translate-x-1/2 items-center gap-1.5">
                             <div
-                                className={`flex h-14 w-32 cursor-ew-resize touch-none items-center justify-center rounded-lg shadow-lg transition-all hover:scale-105 ${
+                                className={`flex h-9 w-16 cursor-ew-resize touch-none items-center justify-center rounded-md shadow-md transition-all hover:scale-105 ${
                                     dragging === 'width'
                                         ? 'bg-green-500 scale-105'
                                         : 'bg-blue-500 hover:bg-blue-600'
@@ -293,20 +291,19 @@ export default function FrameBuilderCanvas({
                                 onMouseDown={(e) => handleMouseDown('width', e)}
                                 onTouchStart={(e) => handleTouchStart('width', e)}
                             >
-                                <div className="flex gap-1">
-                                    <div className="h-7 w-1.5 rounded-full bg-white" />
-                                    <div className="h-7 w-1.5 rounded-full bg-white" />
-                                    <div className="h-7 w-1.5 rounded-full bg-white" />
+                                <div className="flex gap-0.5">
+                                    <div className="h-4 w-1 rounded-full bg-white" />
+                                    <div className="h-4 w-1 rounded-full bg-white" />
+                                    <div className="h-4 w-1 rounded-full bg-white" />
                                 </div>
                             </div>
 
-                            {/* Click area (number) - opens keypad */}
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     handleDimensionClick('width');
                                 }}
-                                className="min-h-[44px] min-w-[60px] rounded-md bg-gray-900 px-3 py-2 text-sm font-bold text-white transition-colors hover:bg-gray-800 active:bg-gray-700"
+                                className="min-h-[32px] min-w-[44px] rounded bg-gray-900 px-2 py-1 text-xs font-bold text-white transition-colors hover:bg-gray-800 active:bg-gray-700"
                             >
                                 {previewWidth ?? width}
                             </button>
@@ -314,25 +311,6 @@ export default function FrameBuilderCanvas({
                     </Card>
                 </div>
 
-                {/* Quick actions */}
-                <div className="border-t bg-white px-6 py-4">
-                    <div className="flex items-center justify-center gap-3">
-                        <Button
-                            variant="outline"
-                            size="lg"
-                            onClick={() => handleDimensionClick('width')}
-                        >
-                            Larghezza: {width} mm
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="lg"
-                            onClick={() => handleDimensionClick('height')}
-                        >
-                            Altezza: {height} mm
-                        </Button>
-                    </div>
-                </div>
             </div>
 
             <NumericKeypad
