@@ -134,7 +134,7 @@ export default function FrameBuilderCanvas({
     const height = frame.height || 1500;
 
     // Scala dinamica: adatta il frame allo spazio disponibile mantenendo l'aspect ratio
-    const maxDisplaySize = 300; // dimensione massima in pixel
+    const maxDisplaySize = 240; // dimensione massima in pixel
     const scaleX = maxDisplaySize / width;
     const scaleY = maxDisplaySize / height;
     const displayScale = Math.min(scaleX, scaleY);
