@@ -4,7 +4,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FolderKanban, Plus, ArrowRight } from 'lucide-react';
+import { FolderKanban, Plus, ArrowRight, BookUser } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -76,19 +76,27 @@ export default function Dashboard() {
                         </CardContent>
                     </Card>
 
-                    <Card className="border-dashed">
+                    <Card className="hover:border-primary transition-colors">
                         <CardHeader>
-                            <CardTitle className="text-muted-foreground">
-                                Funzionalità Future
-                            </CardTitle>
+                            <div className="flex items-center gap-2">
+                                <div className="flex size-10 items-center justify-center rounded-lg bg-blue-500/10">
+                                    <BookUser className="!size-5 text-blue-600 dark:text-blue-500" />
+                                </div>
+                                <div>
+                                    <CardTitle>Rubrica Clienti</CardTitle>
+                                </div>
+                            </div>
                             <CardDescription>
-                                Report, statistiche, e molto altro in arrivo
+                                Gestisci l'anagrafica dei tuoi clienti
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <Button className="w-full" variant="ghost" disabled>
-                                Prossimamente
-                            </Button>
+                            <Link href="/clients">
+                                <Button className="w-full" variant="outline">
+                                    Vai alla Rubrica
+                                    <ArrowRight className="ml-2 !size-4" />
+                                </Button>
+                            </Link>
                         </CardContent>
                     </Card>
                 </div>

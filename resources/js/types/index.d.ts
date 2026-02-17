@@ -42,13 +42,40 @@ export interface User {
     [key: string]: unknown; // This allows for additional properties...
 }
 
+export interface Client {
+    id: number;
+    user_id: number;
+    nome: string | null;
+    cognome: string | null;
+    ragione_sociale: string | null;
+    indirizzo_via: string | null;
+    indirizzo_citta: string | null;
+    indirizzo_cap: string | null;
+    indirizzo_provincia: string | null;
+    telefono: string | null;
+    cellulare: string | null;
+    email: string | null;
+    pec: string | null;
+    codice_fiscale: string | null;
+    partita_iva: string | null;
+    note: string | null;
+    display_name: string;
+    full_address: string | null;
+    projects_count?: number;
+    created_at: string;
+    updated_at: string;
+    deleted_at?: string | null;
+}
+
 export interface Project {
     id: number;
     user_id: number;
     name: string;
     description: string | null;
+    client_id: number | null;
     client_name: string | null;
     client_address: string | null;
+    client?: Client | null;
     status: 'draft' | 'in_progress' | 'completed' | 'archived';
     frames?: Frame[];
     frames_count?: number;

@@ -22,7 +22,7 @@ class FrameBuilderController extends Controller
         }
 
         return Inertia::render('frame-builder', [
-            'project' => $project->load('frames'),
+            'project' => $project->load(['frames', 'client']),
             'framePresets' => FramePreset::active()->get()->groupBy('category'),
         ]);
     }

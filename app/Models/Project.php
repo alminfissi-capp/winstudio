@@ -17,6 +17,7 @@ class Project extends Model
         'description',
         'client_name',
         'client_address',
+        'client_id',
         'status',
     ];
 
@@ -32,6 +33,11 @@ class Project extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class);
     }
 
     public function frames(): HasMany

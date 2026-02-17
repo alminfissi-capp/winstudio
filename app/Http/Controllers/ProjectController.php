@@ -19,12 +19,21 @@ class ProjectController extends Controller
     {
         $projects = $request->user()
             ->projects()
+            ->with('client')
             ->withCount('frames')
             ->latest()
             ->paginate(20);
 
+        $clients = $request->user()
+            ->clients()
+            ->orderBy('ragione_sociale')
+            ->orderBy('cognome')
+            ->orderBy('nome')
+            ->get();
+
         return Inertia::render('projects/index', [
             'projects' => $projects,
+            'clients' => $clients,
         ]);
     }
 

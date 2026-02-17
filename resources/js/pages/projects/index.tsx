@@ -7,10 +7,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, FolderKanban, Calendar, Layers, Trash2, Edit } from 'lucide-react';
-import { Project } from '@/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, FolderKanban, Calendar, Layers, Trash2, MoreVertical, UserPlus, ArrowLeft, Check } from 'lucide-react';
+import { Client, Project } from '@/types';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreVertical } from 'lucide-react';
+import { ClientForm, emptyClientForm, type ClientFormData } from '@/components/client-form';
 
 interface ProjectsIndexProps {
     projects: {
@@ -18,34 +19,71 @@ interface ProjectsIndexProps {
         links: any[];
         meta: any;
     };
+    clients: Client[];
 }
 
-export default function ProjectsIndex({ projects }: ProjectsIndexProps) {
+type DialogView = 'project-form' | 'new-client';
+
+export default function ProjectsIndex({ projects, clients }: ProjectsIndexProps) {
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
+    const [dialogView, setDialogView] = useState<DialogView>('project-form');
     const [formData, setFormData] = useState({
         name: '',
         description: '',
-        client_name: '',
-        client_address: '',
+        client_id: '' as string,
     });
+    const [clientFormData, setClientFormData] = useState<ClientFormData>(emptyClientForm);
+    const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const selectedClient = clients.find((c) => String(c.id) === formData.client_id);
 
     const handleCreateProject = (e: React.FormEvent) => {
         e.preventDefault();
+        if (!formData.client_id) return;
         setIsSubmitting(true);
 
-        router.post('/projects', formData, {
+        router.post('/projects', {
+            ...formData,
+            client_id: Number(formData.client_id),
+        }, {
             onSuccess: () => {
-                setCreateDialogOpen(false);
-                setFormData({
-                    name: '',
-                    description: '',
-                    client_name: '',
-                    client_address: '',
-                });
+                closeDialog();
             },
             onFinish: () => setIsSubmitting(false),
         });
+    };
+
+    const handleCreateClientInline = (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        setClientErrors({});
+
+        router.post('/clients', clientFormData, {
+            preserveScroll: true,
+            onSuccess: (page) => {
+                // After creating the client, go back to the project form
+                // The new client will be in the refreshed clients list
+                const updatedClients = (page.props as any).clients as Client[] | undefined;
+                if (updatedClients && updatedClients.length > 0) {
+                    // Select the most recently created client (last one by id)
+                    const newestClient = updatedClients.reduce((a, b) => a.id > b.id ? a : b);
+                    setFormData((prev) => ({ ...prev, client_id: String(newestClient.id) }));
+                }
+                setClientFormData(emptyClientForm);
+                setDialogView('project-form');
+            },
+            onError: (errs) => setClientErrors(errs),
+            onFinish: () => setIsSubmitting(false),
+        });
+    };
+
+    const closeDialog = () => {
+        setCreateDialogOpen(false);
+        setDialogView('project-form');
+        setFormData({ name: '', description: '', client_id: '' });
+        setClientFormData(emptyClientForm);
+        setClientErrors({});
     };
 
     const handleDeleteProject = (projectId: number) => {
@@ -115,9 +153,9 @@ export default function ProjectsIndex({ projects }: ProjectsIndexProps) {
                                             <CardTitle className="line-clamp-1">
                                                 {project.name}
                                             </CardTitle>
-                                            {project.client_name && (
+                                            {(project.client?.display_name || project.client_name) && (
                                                 <CardDescription className="mt-1">
-                                                    {project.client_name}
+                                                    {project.client?.display_name || project.client_name}
                                                 </CardDescription>
                                             )}
                                         </div>
@@ -178,96 +216,162 @@ export default function ProjectsIndex({ projects }: ProjectsIndexProps) {
             </div>
 
             {/* Create Project Dialog */}
-            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Crea Nuovo Progetto</DialogTitle>
-                        <DialogDescription>
-                            Inserisci le informazioni del progetto per iniziare il rilievo
-                        </DialogDescription>
-                    </DialogHeader>
+            <Dialog open={createDialogOpen} onOpenChange={(open) => { if (!open) closeDialog(); }}>
+                <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+                    {dialogView === 'project-form' ? (
+                        <>
+                            <DialogHeader>
+                                <DialogTitle>Crea Nuovo Progetto</DialogTitle>
+                                <DialogDescription>
+                                    Seleziona il cliente e inserisci i dettagli del progetto
+                                </DialogDescription>
+                            </DialogHeader>
 
-                    <form onSubmit={handleCreateProject} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="name">
-                                Nome Progetto <span className="text-red-500">*</span>
-                            </Label>
-                            <Input
-                                id="name"
-                                value={formData.name}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, name: e.target.value })
-                                }
-                                placeholder="Es: Appartamento Via Roma"
-                                required
-                            />
-                        </div>
+                            <form onSubmit={handleCreateProject} className="space-y-4">
+                                {/* Client Selection */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="client_id">
+                                        Cliente <span className="text-red-500">*</span>
+                                    </Label>
+                                    <div className="flex gap-2">
+                                        <div className="flex-1">
+                                            <Select
+                                                value={formData.client_id}
+                                                onValueChange={(value) =>
+                                                    setFormData({ ...formData, client_id: value })
+                                                }
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Seleziona un cliente..." />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {clients.map((client) => (
+                                                        <SelectItem
+                                                            key={client.id}
+                                                            value={String(client.id)}
+                                                        >
+                                                            {client.display_name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() => setDialogView('new-client')}
+                                            title="Crea nuovo cliente"
+                                        >
+                                            <UserPlus className="!size-4" />
+                                        </Button>
+                                    </div>
+                                    {clients.length === 0 && (
+                                        <p className="text-xs text-muted-foreground">
+                                            Nessun cliente in rubrica. Creane uno per continuare.
+                                        </p>
+                                    )}
+                                    {selectedClient?.full_address && (
+                                        <p className="text-xs text-muted-foreground">
+                                            {selectedClient.full_address}
+                                        </p>
+                                    )}
+                                </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="client_name">Nome Cliente</Label>
-                            <Input
-                                id="client_name"
-                                value={formData.client_name}
-                                onChange={(e) =>
-                                    setFormData({
-                                        ...formData,
-                                        client_name: e.target.value,
-                                    })
-                                }
-                                placeholder="Es: Mario Rossi"
-                            />
-                        </div>
+                                {/* Project Details */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="name">
+                                        Nome Progetto <span className="text-red-500">*</span>
+                                    </Label>
+                                    <Input
+                                        id="name"
+                                        value={formData.name}
+                                        onChange={(e) =>
+                                            setFormData({ ...formData, name: e.target.value })
+                                        }
+                                        placeholder="Es: Appartamento Via Roma"
+                                        required
+                                    />
+                                </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="client_address">Indirizzo</Label>
-                            <Input
-                                id="client_address"
-                                value={formData.client_address}
-                                onChange={(e) =>
-                                    setFormData({
-                                        ...formData,
-                                        client_address: e.target.value,
-                                    })
-                                }
-                                placeholder="Es: Via Roma 123, Palermo"
-                            />
-                        </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="description">Descrizione</Label>
+                                    <Textarea
+                                        id="description"
+                                        value={formData.description}
+                                        onChange={(e) =>
+                                            setFormData({
+                                                ...formData,
+                                                description: e.target.value,
+                                            })
+                                        }
+                                        placeholder="Note aggiuntive sul progetto..."
+                                        rows={3}
+                                    />
+                                </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="description">Descrizione</Label>
-                            <Textarea
-                                id="description"
-                                value={formData.description}
-                                onChange={(e) =>
-                                    setFormData({
-                                        ...formData,
-                                        description: e.target.value,
-                                    })
-                                }
-                                placeholder="Note aggiuntive sul progetto..."
-                                rows={3}
-                            />
-                        </div>
+                                <div className="flex gap-2">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={closeDialog}
+                                        className="flex-1"
+                                        disabled={isSubmitting}
+                                    >
+                                        Annulla
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        className="flex-1"
+                                        disabled={isSubmitting || !formData.client_id}
+                                    >
+                                        {isSubmitting ? 'Creazione...' : 'Crea Progetto'}
+                                    </Button>
+                                </div>
+                            </form>
+                        </>
+                    ) : (
+                        <>
+                            <DialogHeader>
+                                <DialogTitle>Nuovo Cliente</DialogTitle>
+                                <DialogDescription>
+                                    Crea un nuovo cliente per associarlo al progetto
+                                </DialogDescription>
+                            </DialogHeader>
 
-                        <div className="flex gap-2">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setCreateDialogOpen(false)}
-                                className="flex-1"
-                                disabled={isSubmitting}
-                            >
-                                Annulla
-                            </Button>
-                            <Button
-                                type="submit"
-                                className="flex-1"
-                                disabled={isSubmitting}
-                            >
-                                {isSubmitting ? 'Creazione...' : 'Crea Progetto'}
-                            </Button>
-                        </div>
-                    </form>
+                            <form onSubmit={handleCreateClientInline} className="space-y-4">
+                                <ClientForm
+                                    data={clientFormData}
+                                    onChange={setClientFormData}
+                                    errors={clientErrors}
+                                />
+                                <div className="flex gap-2">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => {
+                                            setDialogView('project-form');
+                                            setClientFormData(emptyClientForm);
+                                            setClientErrors({});
+                                        }}
+                                        className="flex-1"
+                                        disabled={isSubmitting}
+                                    >
+                                        <ArrowLeft className="mr-2 !size-4" />
+                                        Indietro
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        className="flex-1"
+                                        disabled={isSubmitting}
+                                    >
+                                        {isSubmitting ? 'Salvataggio...' : 'Crea e Seleziona'}
+                                        {!isSubmitting && <Check className="ml-2 !size-4" />}
+                                    </Button>
+                                </div>
+                            </form>
+                        </>
+                    )}
                 </DialogContent>
             </Dialog>
         </AppLayout>
