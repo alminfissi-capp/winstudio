@@ -14,6 +14,21 @@ jobs:
   ci:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: alm_user
+          POSTGRES_PASSWORD: alm_password
+          POSTGRES_DB: alm_rmi
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -45,3 +60,10 @@ jobs:
 
       - name: Tests
         run: ./vendor/bin/phpunit
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: alm_rmi
+          DB_USERNAME: alm_user
+          DB_PASSWORD: alm_password
