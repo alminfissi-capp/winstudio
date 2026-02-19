@@ -16,8 +16,8 @@ import { ClientForm, emptyClientForm, type ClientFormData } from '@/components/c
 interface ProjectsIndexProps {
     projects: {
         data: Project[];
-        links: any[];
-        meta: any;
+        links: { url: string | null; label: string; active: boolean }[];
+        meta: Record<string, unknown>;
     };
     clients: Client[];
 }
@@ -64,7 +64,7 @@ export default function ProjectsIndex({ projects, clients }: ProjectsIndexProps)
             onSuccess: (page) => {
                 // After creating the client, go back to the project form
                 // The new client will be in the refreshed clients list
-                const updatedClients = (page.props as any).clients as Client[] | undefined;
+                const updatedClients = (page.props as Record<string, unknown>).clients as Client[] | undefined;
                 if (updatedClients && updatedClients.length > 0) {
                     // Select the most recently created client (last one by id)
                     const newestClient = updatedClients.reduce((a, b) => a.id > b.id ? a : b);

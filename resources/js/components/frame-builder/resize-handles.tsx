@@ -90,7 +90,6 @@ export default function ResizeHandles({
         setInitialSize({ width, height });
     };
 
-    const handleSize = Math.max(40, 40 / scale);
     const labelOffset = Math.max(50, 50 / scale);
 
     return (

@@ -93,7 +93,7 @@ export interface Frame {
     height: number | null;
     surface_area: number | null;
     position_order: number;
-    configuration: Record<string, any> | null;
+    configuration: Record<string, unknown> | null;
     created_at: string;
     updated_at: string;
 }
@@ -105,7 +105,7 @@ export interface FramePreset {
     description: string | null;
     icon_path: string | null;
     category: 'imposte' | 'apertura';
-    default_config: Record<string, any> | null;
+    default_config: Record<string, unknown> | null;
     is_active: boolean;
     sort_order: number;
     created_at: string;

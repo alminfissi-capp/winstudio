@@ -46,8 +46,8 @@ import {
 interface ClientsIndexProps {
     clients: {
         data: Client[];
-        links: any[];
-        meta: any;
+        links: { url: string | null; label: string; active: boolean }[];
+        meta: Record<string, unknown>;
     };
 }
 
